@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sadece Senin İçin... ❤️</title>
+    <style>
+        /* Genel Tasarım Ayarları */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0114;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Arka Plan Havai Fişek Canvası */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 1. ŞİFRE EKRANI */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1f002b 0%, #050014 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ff69b4;
+            text-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #ff69b4;
+            border-radius: 25px;
+            background: transparent;
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .login-box input:focus {
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.6);
+        }
+
+        .login-box button {
+            background: linear-gradient(45deg, #ff69b4, #da70d6);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .login-box button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.6);
+        }
+
+        #error-msg {
+            color: #ff4757;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* 2. ANA İÇERİK (Giriş Yapılınca Açılacak) */
+        #main-content {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+            position: relative;
+            z-index: 2;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        /* Başlık Alanı */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            margin-top: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #ff69b4;
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.7);
+            margin-bottom: 10px;
+        }
+
+        /* Fotoğraf Alanları (Kalp ve Havai Fişekli Temalar) */
+        .photo-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .photo-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+
+        .photo-card:hover {
+            transform: scale(1.03);
+            border-color: #ff69b4;
+        }
+
+        /* Kalp Şekilli Fotoğraf Çerçevesi */
+        .heart-frame {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 15px;
+            clip-path: polygon(50% 15%, 65% 0%, 85% 0%, 100% 20%, 100% 45%, 50% 95%, 0% 45%, 0% 20%, 15% 0%, 35% 0%);
+            background: #222; /* Fotoğraf yüklenene kadar boş kalmasın */
+        }
+
+        /* Normal Dikdörtgen Havai Fişekli Fotoğraf Alanı */
+        .normal-frame {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+        }
+
+        .photo-caption {
+            margin-top: 15px;
+            font-style: italic;
+            color: #ddd;
+            font-size: 1.1rem;
+        }
+
+        /* 3. UZUN MEKTUP ALANI */
+        .love-letter {
+            background: rgba(20, 0, 35, 0.7);
+            border: 1px solid rgba(255, 105, 180, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(255, 105, 180, 0.2);
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #f1f1f1;
+            text-align: center;
+            white-space: pre-line; /* Satır boşluklarını korur */
+            margin-bottom: 50px;
+        }
+
+        .love-letter::first-letter {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff69b4;
+            float: left;
+            margin-right: 10px;
+            line-height: 1;
+        }
+
+        /* Arka Plan Müzik Kutusu Süsü */
+        .music-note {
+            text-align: center;
+            font-size: 2rem;
+            color: #ff69b4;
+            animation: pulse 1.5s infinite alternate;
+            margin-bottom: 20px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Havai Fişek Efekti İçin Canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- 1. ŞİFRE GİRİŞ EKRANI -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Giriş Yap ❤️</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Bu siteye sadece dünyalar güzeli bir kadın giriş yapabilir...</p>
+            <input type="password" id="password-input" placeholder="Şifreyi Giriniz...">
+            <br>
+            <button onclick="checkPassword()">Giriş Yap</button>
+            <div id="error-msg">Hmm... Bu doğru şifre değil. Benim sevgilim olduğundan emin misin? 😉</div>
+        </div>
+    </div>
+
+    <!-- 2. ANA SİTE İÇERİĞİ -->
+    <div id="main-content">
+        <header>
+            <div class="music-note">🎵 ❤️ 🎵</div>
+            <h1>İyi Ki Varsın Zeynep'im...</h1>
+            <p style="color: #da70d6;">Seninle geçen her an, gökyüzündeki havai fişekler kadar renkli.</p>
+        </header>
+
+        <!-- FOTOĞRAF ALANLARI -->
+        <div class="photo-container">
+            
+            <!-- Kalp Çerçeveli Fotoğraf -->
+            <div class="photo-card">
+                <!-- img klasöründeki ya da linkteki fotoğrafını src kısmına koy -->
+                <img src="kalpli-fotograf.jpg" alt="Bizim Fotoğrafımız" class="heart-frame">
+                <div class="photo-caption">Kalbimin Tam Ortasındaki Yerin... En Güzel Manzaram.</div>
+            </div>
+
+            <!-- Havai Fişekli/Normal Fotoğraf -->
+            <div class="photo-card">
+                <!-- İkinci fotoğrafını buraya koy -->
+                <img src="havai-fisekli-fotograf.jpg" alt="Güzel Bir An" class="normal-frame">
+                <div class="photo-caption">Gülüşünle Dünyamı Aydınlattığın O Anlardan Biri.</div>
+            </div>
+
+        </div>
+
+        <!-- UZUN MEKTUP BÖLÜMÜ -->
+        <div class="love-letter" id="letter">
+            <!-- BURADAKİ YAZIYI İSTEDİĞİN GİBİ UZATABİLİRSİN KANKA -->
+            Sevgilim, Zeynep'im...
+
+            Bu siteyi tamamen senin için, sana olan sevgimi küçük bir dijital anıya dönüştürmek için hazırladım. Hayatıma girdiğin ilk andan beri her günümü güzelleştirdiğin, bana her an huzur verdiğin için sana ne kadar teşekkür etsem az.
+
+            Gözlerinin içine baktığımda hissettiğim o heyecan, gökyüzünde patlayan binlerce havai fişek kadar büyük ve göz alıcı. Seninle gülerken, seninle konuşurken zamanın nasıl geçtiğini hiç anlamıyorum. Sen benim bu hayattaki en güzel şansımsın.
+
+            Her anımızda, her fotoğrafımızda bana kattığın o eşsiz mutluluğu hiçbir şeye değişmem. Kalbim her zaman seninle, sadece senin adınla atıyor. İyi ki hayatımdasın, iyi ki benim sevgilimsin.
+
+            Seni çok ama çok seviyorum. Geleceğimiz de bu geceki havai fişekler gibi parlak ve ışıl ışıl olsun... ❤️
+        </div>
+    </div>
+
+    <!-- HAVAİ FİŞEK VE GİRİŞ KONTROL SCRIPT'LERİ -->
+    <script>
+        // Şifre Kontrol Fonksiyonu
+        function checkPassword() {
+            const passwordInput = document.getElementById('password-input').value;
+            const errorMsg = document.getElementById('error-msg');
+            const loginScreen = document.getElementById('login-screen');
+            const mainContent = document.getElementById('main-content');
+
+            // Küçük/büyük harf duyarlılığını kaldırmak için küçük harfe çeviriyoruz
+            if (passwordInput.toLowerCase() === 'zeynep') {
+                // Şifre doğruysa giriş ekranını yok et
+                loginScreen.style.opacity = '0';
+                loginScreen.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    // İçeriğin yavaşça gelmesi için
+                    setTimeout(() => {
+                        mainContent.style.opacity = '1';
+                        mainContent.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 1000);
+
+                // Havai fişekleri başlat
+                initFireworks();
+            } else {
+                // Şifre yanlışsa hata mesajını göster
+                errorMsg.style.display = 'block';
+                // Giriş kutusunu sarsalım (küçük aksiyon)
+                document.querySelector('.login-box').style.animation = 'shake 0.3s ease-in-out';
+                setTimeout(() => {
+                    document.querySelector('.login-box').style.animation = '';
+                }, 300);
+            }
+        }
+
+        // Hata durumunda sarsılma efekti için CSS animasyonu ekliyoruz
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+
+        /* ===================================================
+           ARKAPLAN HAVAİ FİŞEK SCRIPT'İ (JAVASCRIPT CANVAS)
+           =================================================== */
+        function initFireworks() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', function() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            class Firework {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = height;
+                    this.targetY = Math.random() * (height * 0.5);
+                    this.speed = Math.random() * 3 + 3;
+                    this.angle = Math.atan2(this.targetY - this.y, this.x - this.x);
+                    this.particles = [];
+                    this.exploded = false;
+                    this.hue = Math.random() * 360; // Renkli olması için rastgele renk kodu
+                }
+
+                update() {
+                    if (!this.exploded) {
+                        this.y -= this.speed;
+                        if (this.y <= this.targetY) {
+                            this.exploded = true;
+                            this.explode();
+                        }
+                    } else {
+                        for (let i = this.particles.length - 1; i >= 0; i--) {
+                            this.particles[i].update();
+                            if (this.particles[i].alpha <= 0) {
+                                this.particles.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+
+                explode() {
+                    let count = 60; // Parçacık sayısı
+                    for (let i = 0; i < count; i++) {
+                        this.particles.push(new Particle(this.x, this.y, this.hue));
+                    }
+                }
+
+                draw() {
+                    if (!this.exploded) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
+                        ctx.fill();
+                    } else {
+                        this.particles.forEach(p => p.draw());
+                    }
+                }
+            }
+
+            class Particle {
+                constructor(x, y, hue) {
+                    this.x = x;
+                    this.y = y;
+                    this.hue = hue + (Math.random() * 40 - 20); // Renk varyasyonu
+                    this.alpha = 1;
+                    this.fade = Math.random() * 0.015 + 0.015;
+                    this.speed = Math.random() * 4 + 1;
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.gravity = 0.05;
+                }
+
+                update() {
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed + this.gravity;
+                    this.alpha -= this.fade;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            let fireworks = [];
+
+            function loop() {
+                // Kuyruklu efekt bırakması için hafif opak temizleme yapıyoruz
+                ctx.fillStyle = 'rgba(11, 1, 20, 0.2)';
+                ctx.fillRect(0, 0, width, height);
+
+                // Rastgele havai fişek üretimi
+                if (Math.random() < 0.04 && fireworks.length < 8) {
+                    fireworks.push(new Firework());
+                }
+
+                for (let i = fireworks.length - 1; i >= 0; i--) {
+                    fireworks[i].update();
+                    fireworks[i].draw();
+                    // Patlamış ve tüm parçacıkları bitmiş olanları temizle
+                    if (fireworks[i].exploded && fireworks[i].particles.length === 0) {
+                        fireworks.splice(i, 1);
+                    }
+                }
+
+                requestAnimationFrame(loop);
+            }
+
+            loop();
+        }
+    </script>
+</body>
+              </html>
+              
